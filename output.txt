@@ -1,0 +1,8 @@
+Error for 11120212629: Discrepancy: Expected 34.13, Found 34.13
+Error for 11120210741: Discrepancy: Expected 169.50, Found 121.50
+Error for 11120240051: Discrepancy: Expected 56.38, Found 56.38
+Error for 11120240366: Discrepancy: Expected 182.00, Found 184.00
+Error for 11120240453: Discrepancy: Expected 140.00, Found 141.00
+Error for 11120241093: Discrepancy: Expected 34.38, Found 34.38
+Error for 11120240065: Discrepancy: Expected 49.38, Found 49.38
+Report saved to report.json
