@@ -1,100 +1,130 @@
 package main
 
 import (
-    "encoding/json"
-    "fmt"
-    "log"
-    "os"
-    "strconv"
+	"fmt"
+	"log"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
 
-    "github.com/xuri/excelize/v2"
+	"github.com/xuri/excelize/v2"
 )
 
 type Student struct {
-    Emplid        string  `json:"emplid"`
-    ClassNo       string  `json:"class_no"`
-    Quiz          float64 `json:"quiz"`
-    MidSem        float64 `json:"mid_sem"`
-    LabTest       float64 `json:"lab_test"`
-    WeeklyLabs    float64 `json:"weekly_labs"`
-    PreCompre     float64 `json:"pre_compre"`
-    Compre        float64 `json:"compre"`
-    Total         float64 `json:"total"`
-    ComputedTotal float64 `json:"computed_total"`
-    Error         string  `json:"error,omitempty"`
-}
-
-func parseExcel(filePath string) ([]Student, error) {
-    f, err := excelize.OpenFile(filePath)
-    if err != nil {
-        return nil, err
-    }
-    defer f.Close()
-
-    rows, err := f.GetRows("CSF111_202425_01_GradeBook")
-    if err != nil {
-        return nil, err
-    }
-
-    var students []Student
-    for i, row := range rows {
-        if i == 0 || len(row) < 11 {
-            continue
-        }
-
-        quiz, _ := strconv.ParseFloat(row[4], 64)
-        midSem, _ := strconv.ParseFloat(row[5], 64)
-        labTest, _ := strconv.ParseFloat(row[6], 64)
-        weeklyLabs, _ := strconv.ParseFloat(row[7], 64)
-        preCompre, _ := strconv.ParseFloat(row[8], 64)
-        compre, _ := strconv.ParseFloat(row[9], 64)
-        total, _ := strconv.ParseFloat(row[10], 64)
-
-        computedTotal := quiz + midSem + labTest + weeklyLabs + compre
-        var errorMsg string
-        if computedTotal != total {
-            errorMsg = fmt.Sprintf("Discrepancy: Expected %.2f, Found %.2f", total, computedTotal)
-        }
-
-        students = append(students, Student{
-            Emplid:        row[2],
-            ClassNo:       row[1],
-            Quiz:          quiz,
-            MidSem:        midSem,
-            LabTest:       labTest,
-            WeeklyLabs:    weeklyLabs,
-            PreCompre:     preCompre,
-            Compre:        compre,
-            Total:         total,
-            ComputedTotal: computedTotal,
-            Error:         errorMsg,
-        })
-    }
-    return students, nil
-}
-
-func reportResults(students []Student) {
-    for _, s := range students {
-        if s.Error != "" {
-            fmt.Printf("Error for %s: %s\n", s.Emplid, s.Error)
-        }
-    }
-
-    data, _ := json.MarshalIndent(students, "", "  ")
-    _ = os.WriteFile("report.json", data, 0644)
-    fmt.Println("Report saved to report.json")
+	EmplID string
+	Marks  float64
 }
 
 func main() {
-    if len(os.Args) < 2 {
-        log.Fatal("Usage: go run main.go <path_to_excel>")
-    }
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: go run main.go <path_to_excel>")
+	}
 
-    filePath := os.Args[1]
-    students, err := parseExcel(filePath)
-    if err != nil {
-        log.Fatal("Error reading file:", err)
-    }
+	excelPath := os.Args[1]
+	file, err := excelize.OpenFile(excelPath)
+	if err != nil {
+		log.Fatalf("Error reading file: %v", err)
+	}
+	defer file.Close()
 
-    reportResults(students)
+	sheetName := file.GetSheetName(0)
+	rows, err := file.GetRows(sheetName)
+	if err != nil {
+		log.Fatalf("Error reading sheet: %v", err)
+	}
+
+	branchTotals := make(map[string][]float64)
+	componentSums := make(map[string]float64)
+	componentCounts := make(map[string]int)
+	var totalScores []float64
+	componentRanks := map[string][]Student{}
+
+	columns := map[string]int{
+		"EMPLID": 1, "CAMPUS_ID": 0, "QUIZ": 2, "MIDSEM": 3, "LABTEST": 4, "WEEKLYLABS": 5, "COMPRE": 6, "TOTAL": 7,
+	}
+
+	validBranchCodes := []string{"A3", "A4", "A5", "A7", "A8", "AA", "AD"}
+
+	for _, row := range rows[1:] {
+		if len(row) < 8 {
+			continue
+		}
+
+		emplID := row[columns["EMPLID"]]
+		campusID := row[columns["CAMPUS_ID"]]
+		if !strings.HasPrefix(campusID, "2024") {
+			continue
+		}
+
+		branch := ""
+		for _, code := range validBranchCodes {
+			if strings.Contains(campusID, code) {
+				branch = code
+				break
+			}
+		}
+		if branch == "" {
+			continue
+		}
+
+		scores := make(map[string]float64)
+		for key, index := range columns {
+			if key == "EMPLID" || key == "CAMPUS_ID" {
+				continue
+			}
+			score, err := strconv.ParseFloat(row[index], 64)
+			if err != nil {
+				continue
+			}
+			scores[key] = score
+		}
+
+		branchTotals[branch] = append(branchTotals[branch], scores["TOTAL"])
+		totalScores = append(totalScores, scores["TOTAL"])
+
+		for key, score := range scores {
+			componentSums[key] += score
+			componentCounts[key]++
+			componentRanks[key] = append(componentRanks[key], Student{EmplID: emplID, Marks: score})
+		}
+	}
+
+	fmt.Println("General Averages:")
+	for comp, sum := range componentSums {
+		avg := sum / float64(componentCounts[comp])
+		fmt.Printf("%s: %.2f\n", comp, avg)
+	}
+
+	fmt.Println("\nBranch-wise Averages (2024 Batch):")
+	for branch, scores := range branchTotals {
+		sum := 0.0
+		for _, score := range scores {
+			sum += score
+		}
+		avg := sum / float64(len(scores))
+		fmt.Printf("Branch %s: %.2f\n", branch, avg)
+	}
+
+	fmt.Println("\nTop 3 Students Per Component:")
+	for comp, students := range componentRanks {
+		sort.Slice(students, func(i, j int) bool {
+			return students[i].Marks > students[j].Marks
+		})
+
+		fmt.Printf("\n%s Rankings:\n", comp)
+		for i := 0; i < 3 && i < len(students); i++ {
+			rankStr := ""
+			switch i {
+			case 0:
+				rankStr = "1st"
+			case 1:
+				rankStr = "2nd"
+			case 2:
+				rankStr = "3rd"
+			}
+			fmt.Printf("%s: EmplID %s - Marks: %.2f\n", rankStr, students[i].EmplID, students[i].Marks)
+		}
+	}
 }
+
