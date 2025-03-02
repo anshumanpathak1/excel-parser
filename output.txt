@@ -1,8 +1,58 @@
-Error for 11120212629: Discrepancy: Expected 34.13, Found 34.13
 Error for 11120210741: Discrepancy: Expected 169.50, Found 121.50
-Error for 11120240051: Discrepancy: Expected 56.38, Found 56.38
 Error for 11120240366: Discrepancy: Expected 182.00, Found 184.00
 Error for 11120240453: Discrepancy: Expected 140.00, Found 141.00
-Error for 11120241093: Discrepancy: Expected 34.38, Found 34.38
-Error for 11120240065: Discrepancy: Expected 49.38, Found 49.38
+
+
+Averages:
+
+total: 140.00
+quiz: 11.63
+mid_sem: 34.67
+lab_test: 19.14
+weekly_labs: 27.76
+pre_compre: 93.19
+compre: 46.71
+
+
+Top 3 students for quiz:
+1: 11120240591, Marks: 27.50
+2: 11120240553, Marks: 24.50
+3: 11120210006, Marks: 24.00
+Top 3 students for mid_sem:
+1: 11120240646, Marks: 67.50
+2: 11120240610, Marks: 67.00
+3: 11120240399, Marks: 66.50
+Top 3 students for lab_test:
+1: 11120210006, Marks: 60.00
+2: 11120210442, Marks: 60.00
+3: 11120221182, Marks: 60.00
+Top 3 students for weekly_labs:
+1: 11120210006, Marks: 30.00
+2: 11120210806, Marks: 30.00
+3: 11120210841, Marks: 30.00
+Top 3 students for pre_compre:
+1: 11120210006, Marks: 179.00
+2: 11120240610, Marks: 178.00
+3: 11120221182, Marks: 171.00
+Top 3 students for compre:
+1: 11120240360, Marks: 95.00
+2: 11120240738, Marks: 94.00
+3: 11120240613, Marks: 93.00
+Top 3 students for total:
+1: 11120240610, Marks: 267.50
+2: 11120210006, Marks: 267.00
+3: 11120240522, Marks: 257.50
+
+
+Branch Averages (2024 entries):
+
+Branch A7: 165.84
+Branch A8: 130.85
+Branch AA: 143.71
+Branch AD: 144.34
+Branch A3: 146.02
+Branch A4: 125.65
+Branch A5: 68.74
+
+
 Report saved to report.json
